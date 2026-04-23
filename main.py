@@ -9,6 +9,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TSQL2012 API", version="0.1.0")
 
+@app.get("/health")
+def health_check():
+    return {"Status": "Have a good one ZHEN"}
+
 # Employees
 @app.get("/v0/employees/", response_model=List[schemas.Employee])
 def read_employees(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
