@@ -61,6 +61,43 @@ def get_top_products(limit: int = 5, db: Session = Depends(get_db)):
     results = crud.get_top_selling_products(db, limit=limit)
     return [{"product_id": r[0], "total_qty": r[1]} for r in results]
 
+# ── Analytics Cases 1–8 ──────────────────────────────────────────────────────
+
+@app.get("/v0/analytics/last-day-orders")
+def last_day_orders(db: Session = Depends(get_db)):
+    return crud.get_last_day_orders(db)
+
+@app.get("/v0/analytics/top-customer-orders")
+def top_customer_orders(db: Session = Depends(get_db)):
+    return crud.get_top_customer_orders(db)
+
+@app.get("/v0/analytics/inactive-employees")
+def inactive_employees(db: Session = Depends(get_db)):
+    return crud.get_inactive_employees(db)
+
+@app.get("/v0/analytics/customer-only-countries")
+def customer_only_countries(db: Session = Depends(get_db)):
+    results = crud.get_customer_only_countries(db)
+    return [r.country for r in results]
+
+@app.get("/v0/analytics/customer-last-day-orders")
+def customer_last_day_orders(db: Session = Depends(get_db)):
+    return crud.get_customer_last_day_orders(db)
+
+@app.get("/v0/analytics/customers-2007-not-2008")
+def customers_2007_not_2008(db: Session = Depends(get_db)):
+    results = crud.get_customers_2007_not_2008(db)
+    return [r.custid for r in results]
+
+@app.get("/v0/analytics/customers-product/{product_id}")
+def customers_by_product(product_id: int, db: Session = Depends(get_db)):
+    results = crud.get_customers_by_product(db, product_id)
+    return [r.custid for r in results]
+
+@app.get("/v0/analytics/running-total-qty")
+def running_total_qty(db: Session = Depends(get_db)):
+    return crud.get_running_total_qty(db)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

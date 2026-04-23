@@ -102,3 +102,57 @@ def test_create_order():
     )
     assert response.status_code == 200
     assert response.json()["orderid"] is not None
+
+# ── Analytics Cases 1–8 ──────────────────────────────────────────────────────
+
+def test_last_day_orders():
+    r = client.get("/v0/analytics/last-day-orders")
+    assert r.status_code == 200
+    data = r.json()
+    # all returned orders share the same date
+    if data:
+        dates = [o["orderdate"] for o in data]
+        assert len(set(dates)) == 1
+
+def test_top_customer_orders():
+    r = client.get("/v0/analytics/top-customer-orders")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+def test_inactive_employees():
+    r = client.get("/v0/analytics/inactive-employees")
+    assert r.status_code == 200
+    for emp in r.json():
+        assert "empid" in emp
+
+def test_customer_only_countries():
+    r = client.get("/v0/analytics/customer-only-countries")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+def test_customer_last_day_orders():
+    r = client.get("/v0/analytics/customer-last-day-orders")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+def test_customers_2007_not_2008():
+    r = client.get("/v0/analytics/customers-2007-not-2008")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+def test_customers_by_product():
+    r = client.get("/v0/analytics/customers-product/12")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+def test_running_total_qty():
+    r = client.get("/v0/analytics/running-total-qty")
+    assert r.status_code == 200
+    data = r.json()
+    assert isinstance(data, list)
+    # verify running total is non-decreasing per customer
+    by_cust = {}
+    for row in data:
+        by_cust.setdefault(row["custid"], []).append(row["running_total"])
+    for totals in by_cust.values():
+        assert totals == sorted(totals)
