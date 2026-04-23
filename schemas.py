@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 # Employee
@@ -22,7 +22,7 @@ class EmployeeCreate(EmployeeBase):
 
 class Employee(EmployeeBase):
     empid: int
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # Customer
 class CustomerBase(BaseModel):
@@ -42,7 +42,7 @@ class CustomerCreate(CustomerBase):
 
 class Customer(CustomerBase):
     custid: int
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # OrderDetail
 class OrderDetailBase(BaseModel):
@@ -56,7 +56,7 @@ class OrderDetailCreate(OrderDetailBase):
 
 class OrderDetail(OrderDetailBase):
     orderid: int
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # Order
 class OrderBase(BaseModel):
@@ -80,4 +80,4 @@ class OrderCreate(OrderBase):
 class Order(OrderBase):
     orderid: int
     details: List[OrderDetail] = []
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
