@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: tsql2012-api
+    env: python
+    buildCommand: ./build.sh
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
