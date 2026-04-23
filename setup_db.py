@@ -40,32 +40,56 @@ def setup_database():
     def clean_val(v):
         v = v.strip()
         if v.upper() == "NULL": return None
+        # Remove N prefix
         if v.startswith("N'"): v = v[1:]
-        if v.startswith("'") and v.endswith("'"):
-            v = v[1:-1].replace("''", "'")
+        # Remove surrounding quotes and handle escaped single quotes
+        while v.startswith("'") and v.endswith("'"):
+            v = v[1:-1]
+        v = v.replace("''", "'")
+        # Format dates: "20060704 00:00:00.000" -> "2006-07-04"
         if v and re.match(r'^\d{8}\s.*', v):
             v = f"{v[0:4]}-{v[4:6]}-{v[6:8]}"
         return v
 
+    def split_sql_values(s):
+        results = []
+        current = []
+        in_string = False
+        i = 0
+        while i < len(s):
+            char = s[i]
+            if char == "'" and not in_string:
+                in_string = True
+                current.append(char)
+            elif char == "'" and in_string:
+                # Check for escaped single quote ''
+                if i + 1 < len(s) and s[i+1] == "'":
+                    current.append("''")
+                    i += 1
+                else:
+                    in_string = False
+                    current.append(char)
+            elif char == "," and not in_string:
+                results.append("".join(current).strip())
+                current = []
+            else:
+                current.append(char)
+            i += 1
+        results.append("".join(current).strip())
+        return results
+
     def parse_and_insert(t_sql_name, sqlite_name, expected_cols):
         print(f"Processing {sqlite_name}...")
-        # Search for INSERT statements and extract the VALUES part
         pattern = rf"INSERT\s+INTO\s+{re.escape(t_sql_name)}[^;]+?VALUES\s*\((.*?)\);"
         matches = re.finditer(pattern, content, re.DOTALL | re.IGNORECASE)
         
         count = 0
         for match in matches:
             vals_str = match.group(1).replace('\n', ' ').replace('\r', ' ')
-            # Split by comma but not inside quotes
-            raw_vals = re.findall(r"(?:N?'(?:''|[^'])*'|[^,]+)", vals_str)
+            raw_vals = split_sql_values(vals_str)
             cleaned = [clean_val(v) for v in raw_vals]
             
-            # TSQL2012.sql might have IDENTITY_INSERT or explicit columns in INSERT
-            # We need to ensure we only take the columns we defined in our schema
-            # Most INSERTs in this file specify all columns.
             if len(cleaned) > expected_cols:
-                # Often the first column is the ID, and the rest match.
-                # Let's just slice to the expected count.
                 cleaned = cleaned[:expected_cols]
             
             placeholders = ",".join(["?"] * len(cleaned))
